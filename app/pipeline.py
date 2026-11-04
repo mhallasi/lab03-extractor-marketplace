@@ -112,6 +112,8 @@ def procesar_producto(pid: int, woo: WooClient | None = None, usar_cache: bool =
 
         datos = datos_de_producto(match.producto)
         urls = datos.pop("_imagenes_url")
+        # El SKU del anuncio es el de la web (el del Excel puede tener erratas). Editable en la tarjeta.
+        datos["sku_fb"] = datos["woo_sku"] or p["codigo"]
         db.update_product(pid, match_tipo=match.tipo, match_confianza=match.confianza, **datos)
 
         notas: list[str] = []
@@ -149,7 +151,8 @@ def _generar_texto(pid: int, usar_cache: bool = True) -> list[str]:
         try:
             r = ai.generar_anuncio(p, cfg.ai_base_url, cfg.ai_api_key, cfg.ai_model, usar_cache=usar_cache)
             db.update_product(pid, titulo_fb=r["titulo"], descripcion_fb=r["descripcion"],
-                              categoria_fb=r["categoria"], texto_origen="ia")
+                              categoria_fb=r["categoria"], etiquetas_fb=r.get("etiquetas") or [],
+                              texto_origen="ia")
             return []
         except ai.AIError as exc:
             aviso = f"IA no disponible ({exc}); se usó el texto de la web."
@@ -157,16 +160,21 @@ def _generar_texto(pid: int, usar_cache: bool = True) -> list[str]:
         aviso = "IA no configurada; se usó el texto de la web."
     r = ai.anuncio_sin_ia(p)
     db.update_product(pid, titulo_fb=r["titulo"], descripcion_fb=r["descripcion"],
-                      categoria_fb=r["categoria"], texto_origen="web")
+                      categoria_fb=r["categoria"], etiquetas_fb=r["etiquetas"], texto_origen="web")
     return [aviso]
+
+
+_AVISO_IA_RE = re.compile(r"\s*IA no (?:disponible \(.*?\)|configurada); se usó el texto de la web\.")
 
 
 def regenerar_texto(pid: int) -> dict:
     notas = _generar_texto(pid, usar_cache=False)
     p = db.get_product(pid)
-    if notas:
-        nota = " ".join(filter(None, [p.get("nota"), *notas]))
+    # Quita el aviso de IA anterior para no acumular uno por cada intento.
+    base = _AVISO_IA_RE.sub("", p.get("nota") or "").strip()
+    nota = " ".join(filter(None, [base, *notas])) or None
+    if nota:
         db.update_product(pid, nota=nota, status="revisar")
-    elif p["status"] == "revisar" and p.get("nota") and "IA" in p["nota"] and p["match_tipo"] == "exacto":
+    elif p["status"] == "revisar":
         db.update_product(pid, status="listo", nota=None)
     return db.get_product(pid)

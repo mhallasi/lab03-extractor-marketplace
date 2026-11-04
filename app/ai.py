@@ -10,7 +10,9 @@ import httpx
 
 from . import db
 
-PROMPT_VERSION = "v2"
+PROMPT_VERSION = "v3"
+MAX_ETIQUETAS = 10
+MAX_LARGO_ETIQUETA = 40
 
 SYSTEM_PROMPT = """Eres un redactor experto en anuncios de Facebook Marketplace en Perú.
 Recibes los datos reales de un producto de una tienda y escribes el anuncio.
@@ -39,8 +41,14 @@ Categoría: sugiere la categoría de Facebook Marketplace más adecuada, en espa
 con formato "Categoría > Subcategoría" (por ejemplo "Hogar y jardín > Iluminación",
 "Electrónica > Audio", "Herramientas", "Juguetes y juegos").
 
+Etiquetas: de 5 a 10 etiquetas de producto para que el anuncio aparezca en las búsquedas.
+  Cada etiqueta es una palabra o frase corta (1 a 3 palabras), en minúsculas, sin "#" ni comas.
+  Mezcla: tipo de producto, sinónimos que la gente busca, marca, modelo y usos.
+  No repitas etiquetas.
+  Ejemplo: ["linterna led", "linterna táctica", "linterna recargable", "opalux", "op-8085", "camping"]
+
 Responde ÚNICAMENTE con un objeto JSON válido, sin texto adicional:
-{"titulo": "...", "descripcion": "...", "categoria": "..."}"""
+{"titulo": "...", "descripcion": "...", "categoria": "...", "etiquetas": ["...", "..."]}"""
 
 EMOJI_RE = re.compile(
     "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F900-\U0001F9FF\U00002B00-\U00002BFF\uFE0F\u200d]"
@@ -146,6 +154,29 @@ def recortar_titulo(titulo: str, limite: int = 100) -> str:
     return corte.strip(" -|,.")
 
 
+def limpiar_etiquetas(valor, limite: int = MAX_ETIQUETAS) -> list[str]:
+    """Normaliza etiquetas: acepta lista o texto separado por comas; quita '#', duplicados y vacías."""
+    if isinstance(valor, str):
+        valor = re.split(r"[,\n;]+", valor)
+    if not isinstance(valor, (list, tuple)):
+        return []
+    resultado: list[str] = []
+    vistos: set[str] = set()
+    for item in valor:
+        texto = limpiar_texto(str(item or "")).replace(",", " ")
+        # Quita el "#" de hashtag (al inicio de palabra) pero conserva el de códigos como URT46F4U#01M4B2.
+        texto = re.sub(r"(^|\s)#+", r"\1", texto)
+        texto = re.sub(r"\s+", " ", texto).strip(" -.").lower()
+        if not texto or len(texto) > MAX_LARGO_ETIQUETA or CJK_RE.search(texto):
+            continue
+        if texto not in vistos:
+            vistos.add(texto)
+            resultado.append(texto)
+        if len(resultado) >= limite:
+            break
+    return resultado
+
+
 def validar(data: dict) -> dict:
     if not isinstance(data, dict):
         raise AIError("Formato inesperado de la IA")
@@ -158,7 +189,10 @@ def validar(data: dict) -> dict:
         raise AIError("La IA devolvió un título vacío")
     if len(descripcion) < 20:
         raise AIError("La IA devolvió una descripción vacía")
-    return {"titulo": titulo, "descripcion": descripcion[:5000], "categoria": categoria[:120]}
+    # Si faltan etiquetas no se descarta el texto: generar_anuncio las completa con los datos de la web.
+    etiquetas = limpiar_etiquetas(data.get("etiquetas"))
+    return {"titulo": titulo, "descripcion": descripcion[:5000], "categoria": categoria[:120],
+            "etiquetas": etiquetas}
 
 
 def construir_mensaje(producto: dict) -> str:
@@ -200,6 +234,8 @@ def generar_anuncio(producto: dict, base_url: str, api_key: str, model: str, usa
                 raise
     else:
         raise ultimo or AIError("Fallo desconocido de la IA")
+    if not result["etiquetas"]:
+        result["etiquetas"] = anuncio_sin_ia(producto)["etiquetas"]
 
     with db.conn() as c:
         c.execute(
@@ -217,7 +253,12 @@ def anuncio_sin_ia(producto: dict) -> dict:
     cierre = "Producto nuevo y original. Escríbenos para consultar disponibilidad y entrega."
     descripcion = f"{descripcion}\n\n{cierre}" if descripcion else cierre
     categoria = " > ".join((producto.get("categorias") or [])[:1])
-    return {"titulo": titulo, "descripcion": limpiar_texto(descripcion), "categoria": categoria}
+    sku = producto.get("woo_sku") or producto.get("codigo") or ""
+    etiquetas = limpiar_etiquetas(
+        [*(producto.get("etiquetas") or []), *(producto.get("categorias") or []), sku]
+    )
+    return {"titulo": titulo, "descripcion": limpiar_texto(descripcion), "categoria": categoria,
+            "etiquetas": etiquetas}
 
 
 def probar_conexion(base_url: str, api_key: str, model: str) -> str:

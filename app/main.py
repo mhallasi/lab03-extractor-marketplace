@@ -68,6 +68,9 @@ def _producto_publico(p: dict) -> dict:
         desc = f"{desc}\n\n{cfg.pie_descripcion}"
     p["descripcion_final"] = desc
     p["condicion"] = cfg.condicion
+    # Productos procesados antes de existir el campo: usar el SKU de la web o del Excel.
+    p["sku_fb"] = p.get("sku_fb") or p.get("woo_sku") or p.get("codigo")
+    p["etiquetas_fb"] = p.get("etiquetas_fb") or []
     return p
 
 
@@ -201,6 +204,11 @@ async def editar_producto(pid: int, request: Request):
         cambios["descripcion_fb"] = str(body["descripcion_fb"])[:5000]
     if "categoria_fb" in body:
         cambios["categoria_fb"] = str(body["categoria_fb"])[:120]
+    if "sku_fb" in body:
+        cambios["sku_fb"] = str(body["sku_fb"]).strip()[:100]
+    if "etiquetas_fb" in body:
+        # Edición manual: se permiten más etiquetas que las que genera la IA (Facebook admite hasta 20).
+        cambios["etiquetas_fb"] = ai.limpiar_etiquetas(body["etiquetas_fb"], limite=20)
     if "precio_fb" in body:
         try:
             cambios["precio_fb"] = max(0, int(body["precio_fb"]))

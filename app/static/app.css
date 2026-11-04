@@ -95,7 +95,9 @@ textarea { resize: vertical; width: 100%; }
 .count { font-size: .75rem; color: var(--muted); }
 .count.over { color: var(--err); font-weight: 700; }
 .grid3 { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: .6rem; }
-@media (max-width: 600px) { .grid3 { grid-template-columns: 1fr; } }
+.grid-sku { display: grid; grid-template-columns: 1fr 3fr; gap: .6rem; }
+.grid-sku input[data-key="sku_fb"] { font-family: ui-monospace, monospace; }
+@media (max-width: 600px) { .grid3, .grid-sku { grid-template-columns: 1fr; } }
 .card-actions { display: flex; gap: .4rem; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: .7rem; margin-top: .4rem; }
 .ayuda { margin: 1rem 0 2rem; }
 

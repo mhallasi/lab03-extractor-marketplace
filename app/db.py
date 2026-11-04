@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS products (
     titulo_fb       TEXT,
     descripcion_fb  TEXT,
     categoria_fb    TEXT,
+    sku_fb          TEXT,
+    etiquetas_fb    TEXT NOT NULL DEFAULT '[]',
     precio_fb       INTEGER,
     texto_origen    TEXT,
     nota            TEXT,
@@ -58,7 +60,15 @@ CREATE TABLE IF NOT EXISTS ai_cache (
 );
 """
 
-JSON_FIELDS = ("categorias", "etiquetas", "imagenes")
+JSON_FIELDS = ("categorias", "etiquetas", "imagenes", "etiquetas_fb")
+
+# Columnas añadidas después de la primera versión: se agregan a bases de datos existentes.
+MIGRACIONES = {
+    "products": {
+        "sku_fb": "TEXT",
+        "etiquetas_fb": "TEXT NOT NULL DEFAULT '[]'",
+    },
+}
 
 
 def data_dir() -> Path:
@@ -90,6 +100,11 @@ def init() -> None:
     with conn() as c:
         c.execute("PRAGMA journal_mode = WAL")
         c.executescript(SCHEMA)
+        for tabla, columnas in MIGRACIONES.items():
+            existentes = {r["name"] for r in c.execute(f"PRAGMA table_info({tabla})")}
+            for nombre, tipo in columnas.items():
+                if nombre not in existentes:
+                    c.execute(f"ALTER TABLE {tabla} ADD COLUMN {nombre} {tipo}")
 
 
 def row_to_dict(row: sqlite3.Row | None) -> dict | None:

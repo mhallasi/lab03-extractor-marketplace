@@ -27,7 +27,9 @@
     const input = multiline
       ? `<textarea id="${id}" data-key="${key}" rows="10" readonly>${esc(valor)}</textarea>`
       : `<input id="${id}" data-key="${key}" value="${esc(valor)}" readonly>`;
-    const contador = key === 'titulo_fb' ? `<span class="count">${(valor || '').length}/100</span>` : '';
+    let contador = '';
+    if (key === 'titulo_fb') contador = `<span class="count">${(valor || '').length}/100</span>`;
+    if (key === 'etiquetas_fb') contador = `<span class="count">${contarEtiquetas(valor)} etiquetas · separadas por coma</span>`;
     return `<div class="campo">
       <div class="campo-head"><label for="${id}">${etiqueta}</label>${contador}
         <button class="btn small copy" data-copy="${id}">Copiar</button></div>
@@ -87,6 +89,10 @@
             ${campo(p, 'precio_fb', 'Precio (S/)', p.precio_fb ?? '')}
             <div class="campo"><div class="campo-head"><label>Condición</label></div><input value="${esc(p.condicion)}" readonly></div>
             ${campo(p, 'categoria_fb', 'Categoría sugerida', p.categoria_fb)}
+          </div>
+          <div class="grid-sku">
+            ${campo(p, 'sku_fb', 'SKU', p.sku_fb)}
+            ${campo(p, 'etiquetas_fb', 'Etiquetas', (p.etiquetas_fb || []).join(', '))}
           </div>
           ${campo(p, 'descripcion_final', 'Descripción', p.descripcion_final, true)}
           <div class="muted small">Web: ${esc(p.nombre_web)} · S/ ${esc(p.precio_web)} ${p.en_stock ? '' : '· <b>sin stock</b>'}
@@ -243,8 +249,17 @@
     }
   });
 
-  // Actualiza el contador del título mientras se edita.
+  function contarEtiquetas(texto) {
+    return String(texto || '').split(',').map(s => s.trim()).filter(Boolean).length;
+  }
+
+  // Actualiza los contadores mientras se edita.
   lista.addEventListener('input', ev => {
+    if (ev.target.dataset.key === 'etiquetas_fb') {
+      const c = ev.target.closest('.campo').querySelector('.count');
+      c.textContent = `${contarEtiquetas(ev.target.value)} etiquetas · separadas por coma`;
+      return;
+    }
     if (ev.target.dataset.key === 'titulo_fb') {
       const c = ev.target.closest('.campo').querySelector('.count');
       c.textContent = `${ev.target.value.length}/100`;
