@@ -1,0 +1,13 @@
+.env
+data/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.Zone.Identifier
+*:Zone.Identifier
+
+# Datos del negocio y archivos locales
+*.xlsx
+!tests/**/*.xlsx
+.atl/

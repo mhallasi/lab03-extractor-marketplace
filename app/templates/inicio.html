@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+{% if not cfg.ai_configurada %}
+<div class="alert warn">
+  La IA no está configurada: los textos se copiarán tal cual desde la web.
+  <a href="/configuracion">Configurar IA</a>
+</div>
+{% endif %}
+
+<section class="panel">
+  <h1>Nuevo lote</h1>
+  <p class="muted">Sube un Excel con las columnas <b>CÓDIGO</b> y <b>NOMBRE</b>. La app busca cada código en
+    <b>{{ cfg.tienda_url }}</b>, descarga las fotos y prepara el anuncio.</p>
+  <form id="form-subir" class="upload" action="/lotes" method="post" enctype="multipart/form-data">
+    <label class="dropzone" id="dropzone">
+      <input type="file" name="archivo" accept=".xlsx,.xlsm" required>
+      <span class="dz-text">Arrastra aquí tu Excel o <u>haz clic para elegirlo</u></span>
+      <span class="dz-file"></span>
+    </label>
+    <button class="btn primary" type="submit">Procesar</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>Lotes anteriores</h2>
+  {% if not lotes %}
+  <p class="muted">Todavía no hay lotes.</p>
+  {% else %}
+  <table class="tabla">
+    <thead><tr><th>#</th><th>Archivo</th><th>Fecha</th><th>Productos</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+    {% for l in lotes %}
+      {% set r = l.resumen %}
+      <tr>
+        <td>{{ l.id }}</td>
+        <td><a href="/lotes/{{ l.id }}">{{ l.archivo }}</a></td>
+        <td>{{ l.creado_en }}</td>
+        <td>{{ r.total }}</td>
+        <td>
+          {% if r.procesando_ahora or r.terminados < r.total %}
+            <span class="badge procesando">Procesando {{ r.terminados }}/{{ r.total }}</span>
+          {% endif %}
+          <span class="badge publicado">{{ r.publicado }} publicados</span>
+          {% if r.revisar %}<span class="badge revisar">{{ r.revisar }} revisar</span>{% endif %}
+          {% if r.no_encontrado %}<span class="badge no_encontrado">{{ r.no_encontrado }} no encontrados</span>{% endif %}
+          {% if r.error %}<span class="badge error">{{ r.error }} errores</span>{% endif %}
+          {% if r.cancelado %}<span class="badge cancelado">{{ r.cancelado }} cancelados</span>{% endif %}
+        </td>
+        <td class="right">
+          <a class="btn small" href="/lotes/{{ l.id }}">Abrir</a>
+          <form action="/lotes/{{ l.id }}/eliminar" method="post" class="inline"
+                onsubmit="return confirm('¿Eliminar el lote y sus fotos?')">
+            <button class="btn small ghost" type="submit">Eliminar</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  const dz = document.getElementById('dropzone');
+  const input = dz.querySelector('input');
+  const show = () => { dz.querySelector('.dz-file').textContent = input.files[0] ? input.files[0].name : ''; dz.classList.toggle('has-file', !!input.files[0]); };
+  input.addEventListener('change', show);
+  ['dragenter','dragover'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('over'); }));
+  ['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('over'); }));
+  dz.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) { input.files = ev.dataTransfer.files; show(); } });
+  document.getElementById('form-subir').addEventListener('submit', ev => {
+    const b = ev.target.querySelector('button'); b.disabled = true; b.textContent = 'Subiendo…';
+  });
+</script>
+{% endblock %}

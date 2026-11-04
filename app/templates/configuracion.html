@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Configuración · Extractor Marketplace{% endblock %}
+{% block content %}
+{% if guardado %}<div class="alert ok">Configuración guardada.</div>{% endif %}
+<form class="panel form" method="post" action="/configuracion" id="form-config" autocomplete="off">
+  <h1>Configuración</h1>
+
+  <h2>Tienda</h2>
+  <label>URL de la tienda (WooCommerce)
+    <input name="tienda_url" type="url" value="{{ cfg.tienda_url }}" required>
+  </label>
+  <div class="row">
+    <button class="btn" type="button" data-probar="tienda">Probar tienda</button>
+    <span class="resultado" id="res-tienda"></span>
+  </div>
+
+  <h2>Inteligencia artificial (compatible con OpenAI)</h2>
+  <p class="muted">Funciona con MiniMax, OpenAI, Gemini (endpoint OpenAI), OpenRouter, etc.</p>
+  <label>URL de la API
+    <input name="ai_base_url" type="url" value="{{ cfg.ai_base_url }}" placeholder="https://api.minimax.io/v1">
+  </label>
+  <label>Modelo
+    <input name="ai_model" value="{{ cfg.ai_model }}" placeholder="MiniMax-M2.7">
+  </label>
+  <label>API key {% if mascara %}<span class="muted">(actual: {{ mascara }} — deja vacío para no cambiarla)</span>{% endif %}
+    <input name="ai_api_key" type="password" value="" placeholder="sk-…">
+  </label>
+  <div class="row">
+    <button class="btn" type="button" data-probar="ia">Probar conexión</button>
+    <span class="resultado" id="res-ia"></span>
+  </div>
+
+  <h2>Anuncio</h2>
+  <div class="grid2">
+    <label>Condición
+      <input name="condicion" value="{{ cfg.condicion }}">
+    </label>
+    <label>Máximo de fotos por producto
+      <input name="max_imagenes" type="number" min="1" max="20" value="{{ cfg.max_imagenes }}">
+    </label>
+    <label>Tamaño máximo de foto (px, lado mayor)
+      <input name="max_lado_px" type="number" min="600" max="4000" value="{{ cfg.max_lado_px }}">
+    </label>
+  </div>
+  <label>Texto fijo al final de la descripción (opcional)
+    <textarea name="pie_descripcion" rows="3" placeholder="Ej.: Entregas en Lima Metropolitana.">{{ cfg.pie_descripcion }}</textarea>
+  </label>
+  <p class="muted">El precio se toma de la web y se redondea hacia arriba a entero (S/ 61.90 → 62).</p>
+
+  <div class="row">
+    <button class="btn primary" type="submit">Guardar</button>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('[data-probar]').forEach(btn => btn.addEventListener('click', async () => {
+    const tipo = btn.dataset.probar;
+    const out = document.getElementById('res-' + tipo);
+    const fd = new FormData(document.getElementById('form-config'));
+    btn.disabled = true; out.className = 'resultado'; out.textContent = 'Probando…';
+    try {
+      const r = await fetch('/api/probar/' + tipo, { method: 'POST', body: fd });
+      const j = await r.json();
+      out.className = 'resultado ' + (j.ok ? 'ok' : 'err'); out.textContent = j.mensaje;
+    } catch (e) { out.className = 'resultado err'; out.textContent = 'Error: ' + e; }
+    btn.disabled = false;
+  }));
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Lote {{ lote.id }} · Extractor Marketplace{% endblock %}
+{% block content %}
+<section class="panel lote-head">
+  <div>
+    <h1>Lote #{{ lote.id }} <span class="muted">{{ lote.archivo }}</span></h1>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div id="resumen" class="resumen muted">Cargando…</div>
+  </div>
+  <div class="acciones">
+    <a class="btn primary" href="{{ fb_url }}" target="fb-marketplace" rel="noopener">Abrir Marketplace ↗</a>
+    <button class="btn warn" id="btn-reanudar" hidden>Reanudar</button>
+  </div>
+</section>
+
+<div class="filtros" id="filtros">
+  <button data-f="pendientes" class="activo">Por publicar</button>
+  <button data-f="revisar">Revisar</button>
+  <button data-f="no_encontrado">No encontrados</button>
+  <button data-f="publicados">Publicados</button>
+  <button data-f="todos">Todos</button>
+</div>
+
+<div id="lista" class="lista" data-lote="{{ lote.id }}" data-fb="{{ fb_url }}"></div>
+
+<p class="muted ayuda">
+  Cómo publicar: abre Marketplace en otra pestaña → en cada tarjeta pulsa <b>Copiar</b> y pega en el campo
+  correspondiente → pulsa <b>Descargar fotos</b> y súbelas (o arrastra las fotos al formulario) → <b>Marcar publicado</b>.
+</p>
+{% endblock %}
+{% block scripts %}<script src="/static/lote.js"></script>{% endblock %}
