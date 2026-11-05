@@ -49,7 +49,8 @@ Si la IA no está configurada o falla, se usa el texto de la web limpio y el pro
    Un lote de 40 productos tarda unos 4–5 minutos; puedes ir publicando mientras termina.
 2. Pulsa **Abrir Marketplace** (se abre en otra pestaña).
 3. En cada tarjeta:
-   - **Copiar** título, precio, categoría, SKU, etiquetas y descripción, y pégalos en Facebook.
+   - La tarjeta sigue el orden del formulario de Facebook: fotos, título, precio, descripción, etiquetas y SKU.
+   - **Copiar** cada campo y pégalo en Facebook. La condición siempre es "Nuevo" y la categoría la eliges en Facebook.
      Las etiquetas se copian separadas por coma; en Facebook pega o escribe cada una y pulsa Enter.
    - **Descargar fotos** (zip) y súbelas, o arrastra las fotos de la tarjeta al formulario.
    - **Marcar publicado**: la tarjeta pasa a la pestaña *Publicados*.
@@ -57,7 +58,7 @@ Si la IA no está configurada o falla, se usa el texto de la web limpio y el pro
    - **Revisar**: el código del Excel no coincidía exacto con la web (por ejemplo `RT46F4U…` → `URT46F4U…`), faltan fotos o la IA falló. Confirma con **Sí, es el producto correcto** o corrige con **Editar**.
    - **No encontrados**: el código no existe en la web. Escribe el código correcto y pulsa **Buscar de nuevo**.
 
-Otros botones: **Editar** (cambia título, precio, categoría, SKU, etiquetas o descripción) y **Regenerar texto IA** (nueva versión del texto).
+Otros botones: **Editar** (cambia título, precio, descripción, etiquetas o SKU) y **Regenerar texto IA** (nueva versión del texto).
 
 ## Estilo del texto
 Sin emojis, sin enlaces y sin precio en el texto. Título de 100 caracteres como máximo, con lo importante al inicio. Descripción con estas partes: beneficio, *Características*, *Especificaciones* y cierre "Producto nuevo y original…". En Configuración puedes añadir un texto fijo al final (zona de entrega, horario, etc.).

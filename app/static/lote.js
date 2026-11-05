@@ -79,22 +79,18 @@
       ${header}
       ${nota}
       <div class="card-body">
+        <!-- Mismo orden que el formulario de Facebook: fotos, título, precio, descripción, etiquetas, SKU -->
         <div class="fotos">
+          <div class="campo-head"><label>Fotos</label>
+            ${fotos ? `<a class="btn small copy" href="/imagenes/${p.id}.zip">Descargar fotos (${p.imagenes_url.length})</a>` : ''}</div>
           <div class="galeria">${fotos || '<div class="muted">Sin fotos</div>'}</div>
-          ${fotos ? `<a class="btn small" href="/imagenes/${p.id}.zip">Descargar fotos (${p.imagenes_url.length})</a>` : ''}
         </div>
         <div class="campos">
           ${campo(p, 'titulo_fb', 'Título', p.titulo_fb)}
-          <div class="grid3">
-            ${campo(p, 'precio_fb', 'Precio (S/)', p.precio_fb ?? '')}
-            <div class="campo"><div class="campo-head"><label>Condición</label></div><input value="${esc(p.condicion)}" readonly></div>
-            ${campo(p, 'categoria_fb', 'Categoría sugerida', p.categoria_fb)}
-          </div>
-          <div class="grid-sku">
-            ${campo(p, 'sku_fb', 'SKU', p.sku_fb)}
-            ${campo(p, 'etiquetas_fb', 'Etiquetas', (p.etiquetas_fb || []).join(', '))}
-          </div>
+          <div class="campo-precio">${campo(p, 'precio_fb', 'Precio (S/)', p.precio_fb ?? '')}</div>
           ${campo(p, 'descripcion_final', 'Descripción', p.descripcion_final, true)}
+          ${campo(p, 'etiquetas_fb', 'Etiquetas', (p.etiquetas_fb || []).join(', '))}
+          <div class="campo-sku">${campo(p, 'sku_fb', 'SKU', p.sku_fb)}</div>
           <div class="muted small">Web: ${esc(p.nombre_web)} · S/ ${esc(p.precio_web)} ${p.en_stock ? '' : '· <b>sin stock</b>'}
             · ${esc((p.categorias || []).join(', '))}</div>
         </div>

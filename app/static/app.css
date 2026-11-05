@@ -82,9 +82,9 @@ textarea { resize: vertical; width: 100%; }
 .card-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .6rem; flex-wrap: wrap; }
 .codigo { font-family: ui-monospace, monospace; font-weight: 600; margin-left: .3rem; }
 .nota { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: .45rem .7rem; margin-bottom: .7rem; font-size: .9rem; }
-.card-body { display: grid; grid-template-columns: 300px 1fr; gap: 1.2rem; }
-@media (max-width: 800px) { .card-body { grid-template-columns: 1fr; } }
-.galeria { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin-bottom: .6rem; }
+.card-body { display: flex; flex-direction: column; gap: .8rem; }
+.fotos { margin-bottom: .2rem; }
+.galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: .4rem; }
 .galeria img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); background: #fff; cursor: grab; display: block; }
 .campos { min-width: 0; }
 .campo { margin-bottom: .6rem; }
@@ -94,10 +94,9 @@ textarea { resize: vertical; width: 100%; }
 .campo input { width: 100%; }
 .count { font-size: .75rem; color: var(--muted); }
 .count.over { color: var(--err); font-weight: 700; }
-.grid3 { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: .6rem; }
-.grid-sku { display: grid; grid-template-columns: 1fr 3fr; gap: .6rem; }
-.grid-sku input[data-key="sku_fb"] { font-family: ui-monospace, monospace; }
-@media (max-width: 600px) { .grid3, .grid-sku { grid-template-columns: 1fr; } }
+.campo-precio, .campo-sku { max-width: 320px; }
+.campo-sku input { font-family: ui-monospace, monospace; }
+@media (max-width: 600px) { .campo-precio, .campo-sku { max-width: none; } }
 .card-actions { display: flex; gap: .4rem; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: .7rem; margin-top: .4rem; }
 .ayuda { margin: 1rem 0 2rem; }
 
